@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WOLF LABS | Main Series: Airport Immigration A2</title>
+    <!-- Premium Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- WOLF LABS SUPREME ENGINE (AVIATION EDITION) --- */
+        :root {
+            --bg-base: #0f172a; /* Deep Navy / Night Sky */
+            --brand-main: #facc15; /* Aviation Yellow / Gold */
+            --accent: #38bdf8; /* Sky Blue */
+            --accent-glow: rgba(250, 204, 21, 0.4);
+            --correct: #10b981; 
+            --incorrect: #ef4444; 
+            --text-main: #f8fafc;
+            --text-dim: #cbd5e1;
+            --glass-bg: rgba(15, 23, 42, 0.85); 
+            --glass-border: rgba(255, 255, 255, 0.1); 
+            --font-display: 'Montserrat', sans-serif;
+            --font-body: 'Outfit', sans-serif;
+            --font-code: 'Fira Code', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        button, input, select, textarea { font-family: var(--font-body); outline: none; }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow: hidden;
+            height: 100vh; width: 100vw;
+            display: flex; flex-direction: column;
+            position: fixed; 
+            perspective: 1000px;
+        }
+
+        /* CORRECTION MODE */
+        .correction-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9998; box-shadow: inset 0 0 0 rgba(239, 68, 68, 0); transition: box-shadow 0.4s ease; }
+        body.correction-mode .correction-overlay { box-shadow: inset 0 0 150px 20px rgba(239, 68, 68, 0.6); }
+
+        /* BACKGROUNDS */
+        .ambient-orbs { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+        .bg-image {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover; background-position: center; opacity: 0.15; filter: grayscale(50%) brightness(0.6);
+        }
+        .bg-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, rgba(15,23,42,0.95) 100%); z-index: 2;
+        }
+        .orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.15; z-index: 3; }
+        .orb-1 { width: 60vw; height: 60vw; background: var(--brand-main); top: -20%; left: -20%; }
+        .orb-2 { width: 50vw; height: 50vw; background: var(--accent); bottom: -10%; right: -10%; }
+
+        /* NAVBAR */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 30px; height: 75px; background: rgba(15,23,42,0.8); backdrop-filter: blur(30px);
+            position: fixed; top: 20px; left: 2%; width: 96%; z-index: 100;
+            border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .logo { color: #fff; font-family: var(--font-display); font-size: 1.2rem; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 10px;}
+        .logo i { color: var(--brand-main); }
+        .logo span { background: var(--brand-main); color: #000; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; }
+        .nav-controls { display: flex; gap: 10px; align-items: center;}
+        .teacher-tool {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #cbd5e1; width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
+            font-size: 1rem; transition: 0.3s; display: flex; align-items: center; justify-content: center;
+        }
+        .teacher-tool:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .teacher-tool.active-tool { background: var(--brand-main); color: #000; border-color: var(--brand-main); box-shadow: 0 0 15px var(--accent-glow); }
+
+        /* MAIN CONTAINER & SLIDES */
+        .main-container { flex: 1; position: relative; z-index: 10; padding: 110px 5% 100px 5%; display: flex; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);}
+        .slide { height: 100%; width: 100%; max-width: 1100px; display: none; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transform: translateY(20px); transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .slide.active { display: flex; opacity: 1; transform: translateY(0); }
+
+        .glass-panel {
+            background: var(--glass-bg); backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border); border-top: 3px solid var(--brand-main);
+            padding: 50px 60px; border-radius: 30px; width: 100%; max-height: 82vh; 
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8), inset 0 20px 50px rgba(255,255,255,0.02);
+            display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
+            position: relative; overflow-y: auto; scrollbar-width: none;
+        }
+        .glass-panel::-webkit-scrollbar { display: none; }
+        .glass-panel > * { flex-shrink: 0; }
+
+        /* TYPOGRAPHY */
+        h1 { font-family: var(--font-display); font-size: 4.5rem; color: #fff; line-height: 1; margin-bottom: 20px; text-align: center; letter-spacing: -2px; }
+        h2 { font-family: var(--font-display); font-size: 2.2rem; color: var(--brand-main); margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 15px; text-transform: uppercase;}
+        p { font-size: 1.3rem; color: var(--text-dim); line-height: 1.6; text-align: center; margin-bottom: 25px;}
+
+        /* BUTTONS & INPUTS */
+        .btn-start { 
+            padding: 20px 45px; border: none; border-radius: 15px; font-weight: 800; font-size: 1.2rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 12px; background: var(--brand-main); color: #000; box-shadow: 0 10px 30px var(--accent-glow);
+        }
+        .btn-start:hover { transform: translateY(-5px); filter: brightness(1.1); box-shadow: 0 15px 40px rgba(250, 204, 21, 0.6); }
+        .input-name { width: 100%; max-width: 400px; padding: 18px 30px; border-radius: 15px; border: 2px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: #fff; font-size: 1.4rem; text-align: center; margin-bottom: 30px; transition: 0.3s;}
+        .input-name:focus { border-color: var(--brand-main); box-shadow: 0 0 25px var(--accent-glow); }
+
+        /* VIDEO WRAPPER */
+        .video-wrapper { position: relative; width: 100%; max-width: 850px; aspect-ratio: 16/9; background: #000; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.8); margin-bottom: 25px; z-index: 50; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; pointer-events: auto !important; z-index: 60; }
+        
+        /* SPEAKING HUB & STARTERS */
+        .speaking-hub { margin-top: 30px; padding: 30px; background: rgba(0,0,0,0.5); border-radius: 20px; border-left: 5px solid var(--accent); text-align: left; width: 100%; display: none; animation: popIn 0.5s ease;}
+        
+        .starter-reveal-btn {
+            background: rgba(56, 189, 248, 0.1); border: 1px dashed var(--accent); color: var(--accent);
+            padding: 12px 24px; border-radius: 50px; cursor: pointer; transition: 0.3s; font-family: var(--font-code);
+            display: inline-flex; align-items: center; gap: 10px; margin-top: 15px; font-weight: 700; font-size: 1rem;
+        }
+        .starter-reveal-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); }
+        .starter-content {
+            display: none; margin-top: 15px; padding: 20px; background: rgba(0, 0, 0, 0.5); 
+            border-left: 4px solid var(--brand-main); border-radius: 12px; animation: popIn 0.4s ease-out forwards;
+        }
+        .starter-content.active { display: flex; flex-direction: column; gap: 8px; }
+        .starter-title { font-size: 0.8rem; color: var(--brand-main); font-family: var(--font-display); text-transform: uppercase; letter-spacing: 1px; font-weight: 900; margin-bottom: 5px; }
+        .starter-phrase { font-family: var(--font-code); font-size: 1.4rem; color: #fff; font-weight: bold;}
+        
+        @keyframes popIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- THEMATIC GAMES CSS --- */
+        .ww-grid { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 20px;}
+        .ww-box { width: 160px; height: 160px; background: #1e293b; border-radius: 20px; border: 2px solid var(--glass-border); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+        .ww-box:hover { border-color: var(--brand-main); transform: translateY(-10px); background: #283548; box-shadow: 0 10px 20px var(--accent-glow);}
+        .ww-box i { font-size: 3rem; color: var(--brand-main); margin-bottom: 10px; }
+        .ww-box.opened { opacity: 0.2; pointer-events: none; }
+        
+        /* Grammar Sandbox */
+        .grammar-switch { display: flex; justify-content: center; gap: 20px; margin-bottom: 25px; flex-wrap: wrap; width: 100%; max-width: 900px; margin-inline: auto;}
+        .switch-btn { background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2); color: white; padding: 15px 40px; border-radius: 50px; font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: 0.3s; font-family: var(--font-code); box-shadow: 0 8px 20px rgba(0,0,0,0.3);}
+        .switch-btn.active { background: var(--brand-main); color: #000; border-color: var(--brand-main); box-shadow: 0 0 30px var(--accent-glow); transform: scale(1.05);}
+        .sandbox-display { background: rgba(0,0,0,0.5); padding: 50px; border-radius: 24px; border-left: 6px solid var(--brand-main); min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 0 30px rgba(0,0,0,0.6); text-align: center; width: 100%; max-width: 900px; margin-inline: auto;}
+
+        /* Skill Sorter */
+        .scale-container { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 800px; margin: 0 auto;}
+        .scale-display { background: #000; border: 4px solid #334155; border-radius: 15px; width: 100%; max-width: 500px; padding: 20px; font-family: var(--font-code); font-size: 2.5rem; font-weight: 900; color: var(--brand-main); text-align: center; box-shadow: inset 0 0 20px rgba(250, 204, 21, 0.2); text-transform: uppercase; letter-spacing: 2px; min-height: 100px; display: flex; align-items: center; justify-content: center;}
+        .scale-controls { display: flex; gap: 20px; width: 100%; justify-content: center;}
+        .scale-btn { padding: 20px 40px; font-size: 1.8rem; font-family: var(--font-display); font-weight: 900; border-radius: 20px; border: 4px solid var(--glass-border); background: #1e293b; color: #fff; cursor: pointer; transition: 0.2s; flex: 1; max-width: 300px;}
+        .scale-btn:hover { background: #334155; transform: translateY(-5px);}
+        .scale-btn:active { transform: scale(0.95); }
+        .scale-baskets { display: flex; gap: 40px; width: 100%; justify-content: center; margin-top: 20px;}
+        .basket { flex: 1; min-height: 150px; border: 3px dashed rgba(255,255,255,0.2); border-radius: 20px; padding: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; position: relative; background: rgba(0,0,0,0.3);}
+        .basket::before { content: attr(data-label); position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--bg-base); padding: 0 15px; font-family: var(--font-code); font-weight: 800; color: var(--text-dim); font-size: 1.2rem; white-space: nowrap;}
+        .scale-item-chip { background: var(--brand-main); color: #000; font-family: var(--font-code); font-weight: 700; padding: 8px 15px; border-radius: 8px; font-size: 1.1rem; animation: popIn 0.3s ease-out;}
+
+        /* Syntax Builder */
+        .drop-zone { min-height: 100px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 20px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; padding: 20px; margin-bottom: 20px; width: 100%; background: rgba(0,0,0,0.2);}
+        .word-chip { padding: 12px 25px; background: #1e293b; border: 1px solid var(--glass-border); border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.2s; color: #fff; font-size: 1.2rem;}
+        .word-chip:hover { background: var(--brand-main); color: #000; border-color: var(--brand-main); transform: translateY(-3px);}
+
+        /* Truth Board */
+        .truth-board { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 20px; margin: 0 auto;}
+        .truth-row { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); padding: 25px 40px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; gap: 30px; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.2);}
+        .truth-row:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); transform: translateY(-3px);}
+        .truth-text { font-size: 1.6rem; font-weight: 500; color: #f8fafc; flex: 1; text-align: left; line-height: 1.4;}
+        .tf-btns { display: flex; gap: 15px; }
+        .tf-btn { width: 120px; height: 55px; border-radius: 14px; border: 2px solid rgba(255,255,255,0.2); background: transparent; color: #fff; font-family: var(--font-display); font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; letter-spacing: 1px;}
+        .tf-btn:hover { background: rgba(255,255,255,0.1); transform: scale(1.05);}
+        .truth-row.solved-true .tf-btn.t-btn { background: var(--correct); border-color: var(--correct); color: #000; box-shadow: 0 0 20px rgba(16,185,129,0.5); transform: scale(1.05);}
+        .truth-row.solved-false .tf-btn.f-btn { background: var(--incorrect); border-color: var(--incorrect); color: #fff; box-shadow: 0 0 20px rgba(239,68,68,0.5); transform: scale(1.05);}
+        .truth-row.solved-true .tf-btn.f-btn, .truth-row.solved-false .tf-btn.t-btn { opacity: 0.3; pointer-events: none; filter: grayscale(100%);}
+
+        /* Immigration Quiz (Replaced Memory Grid) */
+        .quiz-container { width: 100%; max-width: 800px; position: relative; min-height: 350px; margin: 0 auto;}
+        .quiz-step { position: absolute; top:0; left:0; width: 100%; background: rgba(0,0,0,0.5); border: 2px solid var(--glass-border); border-radius: 20px; padding: 40px; text-align: center; display: none; animation: popIn 0.4s ease-out forwards; box-shadow: 0 15px 30px rgba(0,0,0,0.5);}
+        .quiz-step.active { display: block; }
+        .quiz-q { font-size: 1.6rem; color: #fff; font-weight: 700; margin-bottom: 30px; font-family: var(--font-display); line-height: 1.4;}
+        .quiz-options { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .quiz-opt { flex: 1; min-width: 250px; padding: 25px; border-radius: 15px; background: #1e293b; border: 2px solid rgba(255,255,255,0.1); color: #fff; font-size: 1.2rem; cursor: pointer; transition: 0.3s; font-family: var(--font-code); font-weight: 600;}
+        .quiz-opt:hover { background: rgba(56, 189, 248, 0.1); border-color: var(--accent); transform: translateY(-5px);}
+        .quiz-result { text-align: center; display: none; animation: popIn 0.6s ease-out forwards; background: rgba(16, 185, 129, 0.1); padding: 50px; border-radius: 20px; border: 2px solid var(--correct); box-shadow: 0 0 40px rgba(16,185,129,0.3);}
+
+        /* Picture Reveal Grid */
+        .reveal-area { width: 100%; max-width: 600px; aspect-ratio: 16/9; margin: 0 auto 30px; position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6); background-color: #334155; background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=800&auto=format&fit=crop'); background-size: cover; background-position: center;}
+        .reveal-grid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 2px; padding: 2px;}
+        .reveal-tile { background: #1e293b; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--font-display); font-size: 2rem; cursor: pointer; transition: opacity 0.4s; }
+        .reveal-tile:hover { background: #334155; }
+
+        /* Odd One Out */
+        .odd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 600px; margin: 0 auto 30px; }
+        .odd-btn { background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.1); padding: 30px; font-size: 1.8rem; border-radius: 20px; color: #fff; cursor: pointer; transition: 0.3s; font-family: var(--font-display); font-weight: 700; box-shadow: 0 10px 20px rgba(0,0,0,0.3);}
+        .odd-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--brand-main); transform: translateY(-5px); box-shadow: 0 15px 30px rgba(250, 204, 21, 0.2);}
+        .odd-btn.correct { background: var(--correct); color: #000; border-color: var(--correct); transform: scale(1.05); pointer-events: none; box-shadow: 0 0 30px rgba(16,185,129,0.5);}
+        .odd-btn.wrong { background: var(--incorrect); border-color: var(--incorrect); animation: shake 0.4s; pointer-events: none; }
+        .odd-btn.dimmed { opacity: 0.3; pointer-events: none; }
+
+        /* Slot Machine */
+        .slot-machine { width: 100%; max-width: 400px; height: 100px; background: rgba(0,0,0,0.8); border: 4px solid var(--brand-main); border-radius: 20px; margin: 0 auto 30px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;}
+        .slot-display { font-family: var(--font-display); font-size: 2.2rem; color: #fff; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; transition: 0.1s; text-align: center;}
+
+        /* Phone UI */
+        .phone-ui { width: 100%; max-width: 400px; height: 600px; background: #0f172a; border: 14px solid #1e293b; border-radius: 45px; position: relative; margin: 0 auto; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.9); }
+        .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 25px; background: #1e293b; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; z-index: 20; }
+        .phone-top-bar { height: 80px; background: rgba(31, 41, 55, 0.98); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px; font-weight: 800; font-size: 1.2rem; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .phone-chat-area { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scrollbar-width: none; }
+        .phone-msg { padding: 15px 22px; border-radius: 20px; max-width: 85%; font-size: 1.15rem; line-height: 1.4; animation: popIn 0.3s ease-out forwards; font-weight: 500; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.2);}
+        .phone-msg.received { background: #334155; color: #fff; align-self: flex-start; border-bottom-left-radius: 6px; }
+        .phone-msg.sent { background: var(--brand-main); color: #000; align-self: flex-end; border-bottom-right-radius: 6px; font-weight: 700; display: none;}
+        .phone-msg.sent.visible { display: block; }
+        .phone-options-area { padding: 25px; background: rgba(15, 23, 42, 0.98); border-top: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 15px; z-index: 10; }
+        .phone-opt-btn { background: rgba(30, 41, 59, 0.8); border: 2px solid rgba(255,255,255,0.1); color: #fff; padding: 18px 25px; border-radius: 16px; font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: all 0.3s; text-align: left; display: block; width: 100%; box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
+        .phone-opt-btn:hover { background: rgba(56, 189, 248, 0.1); border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+        .typing-indicator { display: flex; gap: 6px; padding: 16px 25px; background: #334155; border-radius: 20px; align-self: flex-start; border-bottom-left-radius: 6px; animation: popIn 0.3s ease-out forwards; display: none;}
+        .typing-indicator.visible { display: flex; }
+        .dot { width: 10px; height: 10px; background: #9ca3af; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; } .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        /* Would You Rather */
+        .wyr-container { display: flex; gap: 20px; width: 100%; max-width: 900px; margin: 0 auto;}
+        .wyr-card { flex: 1; border-radius: 20px; background: rgba(0,0,0,0.4); border: 2px solid var(--glass-border); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.4s; padding: 40px 20px; text-align: center;}
+        .wyr-card i { font-size: 5rem; margin-bottom: 25px; color: var(--text-dim); transition: 0.3s;}
+        .wyr-card p { font-family: var(--font-display); font-size: 1.5rem; color: #fff; line-height: 1.4; margin: 0;}
+        .wyr-card:hover { transform: scale(1.02); border-color: var(--brand-main); background: rgba(250, 204, 21, 0.05); }
+        .wyr-card:hover i { color: var(--brand-main); }
+        .wyr-card.selected { background: var(--brand-main); transform: scale(1.05); border-color: var(--brand-main); box-shadow: 0 15px 40px var(--accent-glow); pointer-events: none;}
+        .wyr-card.selected i, .wyr-card.selected p { color: #000; }
+        .wyr-container.locked .wyr-card:not(.selected) { opacity: 0.3; filter: grayscale(100%); pointer-events: none; transform: scale(0.95); }
+
+        /* Agree/Disagree */
+        .agree-container { display: flex; gap: 15px; width: 100%; max-width: 800px; margin: 0 auto; justify-content: center;}
+        .agree-btn { padding: 25px; font-weight: 800; font-size: 1.3rem; font-family: var(--font-display); border-radius: 16px; border: 2px solid; background: rgba(0,0,0,0.6); transition: 0.3s; flex: 1; cursor: pointer; color: #fff;}
+        .agree-btn.disagree { border-color: #ef4444; }
+        .agree-btn.neutral { border-color: #f59e0b; }
+        .agree-btn.agree { border-color: #10b981; }
+        .agree-btn:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .agree-btn:hover.disagree { background: #ef4444; color:#fff;}
+        .agree-btn:hover.neutral { background: #f59e0b; color:#fff;}
+        .agree-btn:hover.agree { background: #10b981; color:#000;}
+        .agree-btn.selected.disagree { background: #ef4444; color: #fff; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.5); transform: scale(1.05);}
+        .agree-btn.selected.neutral { background: #f59e0b; color: #fff; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.5); transform: scale(1.05);}
+        .agree-btn.selected.agree { background: #10b981; color: #000; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5); transform: scale(1.05);}
+        .agree-container.locked .agree-btn:not(.selected) { opacity: 0.3; pointer-events: none; filter: grayscale(100%);}
+
+        /* Name 3 Challenge */
+        .n3-circle { width: 80px; height: 80px; border-radius: 50%; border: 3px dashed rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: rgba(255,255,255,0.3); cursor: pointer; transition: 0.3s; background: rgba(0,0,0,0.4);}
+        .n3-circle.filled { background: var(--brand-main); border-color: var(--brand-main); border-style: solid; color: #000; transform: scale(1.1); box-shadow: 0 0 20px var(--accent-glow); }
+        .n3-checks-container { display: flex; gap: 20px; justify-content: center; margin-top: 30px; display: none; animation: popIn 0.5s ease; }
+
+        /* Topic Cards */
+        .topic-grid { display: flex; gap: 20px; justify-content: center; perspective: 1000px; margin-bottom: 30px; flex-wrap: wrap;}
+        .t-card { width: 220px; height: 300px; position: relative; cursor: pointer; transform-style: preserve-3d; transition: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .t-card.flipped { transform: rotateY(180deg) scale(1.05); z-index: 10; pointer-events: none;}
+        .t-front, .t-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 24px; display: flex; align-items: center; justify-content: center; padding: 25px; text-align: center; box-shadow: 0 15px 30px rgba(0,0,0,0.5);}
+        .t-front { background: linear-gradient(135deg, var(--bg-base), #1e3a8a); color: #fff; font-size: 5rem; border: 4px solid rgba(255,255,255,0.2); }
+        .t-front::after { content: '?'; position: absolute; font-family: var(--font-display); font-weight: 900; opacity: 0.8;}
+        .t-front:hover { filter: brightness(1.1); transform: translateY(-5px); box-shadow: 0 20px 40px var(--accent-glow); border-color: var(--brand-main);}
+        .t-back { background: #fff; color: #0f172a; transform: rotateY(180deg); font-size: 1.4rem; font-weight: 800; border: 4px solid var(--brand-main); flex-direction: column; gap: 15px;}
+
+        /* The Arena Cards */
+        .arena-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; perspective: 1000px; margin-top: 30px; width: 100%; max-width: 400px; margin-inline: auto;}
+        .arena-card { background: transparent; min-height: 260px; cursor: pointer; width: 100%; display: block; }
+        .arena-card-inner { position: relative; width: 100%; height: 100%; min-height: 260px; text-align: center; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; }
+        .arena-card.flipped .arena-card-inner { transform: rotateY(180deg); }
+        .arena-card-front, .arena-card-back { position: absolute; top: 0; left: 0; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); box-sizing: border-box; }
+        .arena-card-front { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
+        .arena-card-front i { font-size: 3.5rem; color: var(--brand-main); margin-bottom: 15px; filter: drop-shadow(0 0 15px rgba(250, 204, 21, 0.5));}
+        .arena-card-front h3 { font-family: var(--font-display); font-size: 1.5rem; color: #fff; letter-spacing: 2px; margin: 0;}
+        .arena-card-back { background: var(--brand-main); color: #000; transform: rotateY(180deg); box-shadow: 0 15px 40px var(--accent-glow); padding: 20px; }
+        .arena-card-back p { color: #000; font-size: 1.15rem; font-weight: 700; margin: 0; line-height: 1.6; }
+
+        /* FOOTER */
+        .footer { position: fixed; bottom: 0; left: 0; width: 100%; height: 85px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); display: flex; justify-content: space-between; align-items: center; padding: 0 5%; z-index: 150; border-top: 1px solid rgba(255,255,255,0.05); transition: 0.4s; }
+        .footer.hidden-mode { transform: translateY(100px); }
+        .nav-btn { background: transparent; border: none; color: #94a3b8; padding: 12px 25px; font-weight: 800; cursor: pointer; transition: 0.3s; font-family: var(--font-code); display: flex; align-items: center; gap: 10px; }
+        .nav-btn:hover:not(:disabled) { color: #fff; }
+        .nav-btn.next { background: #fff; color: #000; border-radius: 12px; padding: 15px 40px; box-shadow: 0 5px 15px rgba(255,255,255,0.1); }
+        .nav-btn.next:hover { background: var(--brand-main); color: #000; box-shadow: 0 5px 25px var(--accent-glow); transform: translateY(-2px);}
+        .nav-btn.next.pulsing { animation: pulseNext 2s infinite; background: var(--brand-main); color: #000; }
+        .progress-bar { position: fixed; bottom: 85px; left: 0; height: 5px; background: var(--brand-main); transition: 0.4s; z-index: 151; box-shadow: 0 0 10px var(--brand-main);}
+        @keyframes pulseNext { 0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); } 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); } }
+
+        /* TEACHER HUD & SMART DICT */
+        .sidebar-panel { position: fixed; top: 0; right: -600px; width: 500px; height: 100vh; background: rgba(15,23,42,0.98); z-index: 250; padding: 100px 50px 50px; transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1); border-left: 1px solid var(--glass-border); box-shadow: -30px 0 60px rgba(0,0,0,0.8); backdrop-filter: blur(20px);}
+        .sidebar-panel.right-open { right: 0; }
+        .sidebar-close { position: absolute; top: 30px; left: 30px; background: rgba(255,255,255,0.05); border: none; color: #fff; width: 50px; height: 50px; border-radius: 15px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s;}
+        .sidebar-close:hover { background: var(--incorrect); }
+
+        .teacher-hud { position: fixed; top: 0; left: -500px; width: 450px; height: 100vh; background: rgba(15,23,42,0.98); z-index: 250; padding: 100px 50px 50px; transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1); border-right: 1px solid var(--glass-border); box-shadow: 30px 0 60px rgba(0,0,0,0.8); overflow-y: auto; backdrop-filter: blur(20px);}
+        .teacher-hud.open { left: 0; }
+        .hud-btn { width: 100%; padding: 15px; background: #1e293b; border: 1px solid var(--glass-border); color: #fff; border-radius: 12px; margin-bottom: 15px; cursor: pointer; font-family: var(--font-body); font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; transition: 0.2s;}
+        .hud-btn:hover { background: var(--accent); border-color: var(--accent); color: #000; }
+        .hud-btn.warning:hover { background: var(--incorrect); border-color: var(--incorrect); color: #fff; }
+        .hud-timer { font-family: var(--font-code); font-size: 3.5rem; color: var(--brand-main); text-align: center; margin-bottom: 20px; font-weight: 900;}
+
+        /* ALERTS */
+        .alert-overlay { position: fixed; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; z-index: 9999; opacity: 0; transition: 0.3s; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);}
+        .alert-text { font-family: var(--font-display); font-size: 6rem; text-transform: uppercase; font-weight: 900; text-shadow: 0 10px 40px rgba(0,0,0,0.8); transform: scale(0.5); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; line-height: 1;}
+        .alert-overlay.show { opacity: 1; }
+        .alert-overlay.show .alert-text { transform: scale(1); }
+        .alert-error { color: var(--incorrect); filter: drop-shadow(0 0 30px var(--incorrect)); }
+        .alert-praise { color: var(--correct); filter: drop-shadow(0 0 30px var(--correct)); }
+        .alert-cue { color: var(--accent); filter: drop-shadow(0 0 30px var(--accent)); }
+
+        .dict-word { font-family: var(--font-display); font-size: 3.5rem; color: var(--brand-main); margin-bottom: 5px; text-transform: uppercase; }
+        .dict-phonetic { font-family: var(--font-code); color: var(--accent); font-size: 1.2rem; margin-bottom: 25px; display: block; }
+        .dict-def { font-size: 1.4rem; color: #fff; line-height: 1.6; border-left: 4px solid var(--brand-main); padding-left: 20px; }
+        #d-video-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin-top: 20px; display: none; position: relative;}
+        #d-video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        .hl { color: var(--brand-main); font-weight: 800; border-bottom: 2px dashed var(--brand-main); cursor: help; padding: 0 4px; transition: 0.2s;}
+        .hl:hover { background: rgba(250, 204, 21, 0.15); border-bottom-style: solid; border-radius: 4px;}
+
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+    </style>
+</head>
+<body>
+
+    <div class="correction-overlay"></div>
+
+    <div class="ambient-orbs">
+        <div class="bg-image"></div>
+        <div class="bg-overlay"></div>
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <div class="alert-overlay" id="alert-screen"><div class="alert-text" id="alert-msg">GREAT JOB!</div></div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo"><i class="fa-solid fa-plane-departure"></i> WOLF LABS <span>IMMIGRATION</span></div>
+        <div class="nav-controls">
+            <button class="teacher-tool" onclick="window.showHub('teacher-hud')" title="Teacher HUD"><i class="fa-solid fa-toolbox"></i></button>
+            <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.1); margin: 0 5px;"></div>
+            <button class="teacher-tool" onclick="window.toggleFullscreen()" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
+        </div>
+    </nav>
+
+    <!-- TEACHER HUD -->
+    <div class="teacher-hud" id="teacher-hud">
+        <button class="sidebar-close" style="left: auto; right: 30px;" onclick="document.getElementById('teacher-hud').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button>
+        <p style="font-family: var(--font-code); color: var(--brand-main); font-size: 0.8rem; margin-bottom: 20px; letter-spacing: 2px;">// TEACHER TOOL SET</p>
+        
+        <div class="hud-timer" id="hud-timer">00:60</div>
+        <button class="hud-btn" onclick="startTimer()"><i class="fa-solid fa-play"></i> Start 60s Timer</button>
+        <button class="hud-btn warning" onclick="toggleCorrectionMode()" style="background: rgba(239, 68, 68, 0.1); border-color: var(--incorrect); color: var(--incorrect);"><i class="fa-solid fa-hand-paper"></i> Correction Mode</button>
+        
+        <div style="margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 25px;">
+            <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 15px; font-weight: 700; font-family: var(--font-code);">STUDENT POINTS</p>
+            <div style="display: flex; align-items: center; justify-content: space-between; background: #000; padding: 15px 25px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                <span style="color: var(--brand-main); font-size: 2rem; font-weight: 900;" id="hud-stars">⭐ 0</span>
+                <button class="hud-btn" style="width: auto; margin: 0; padding: 10px 20px;" onclick="awardStar()">+1</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 25px;">
+            <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 15px; font-weight: 700; font-family: var(--font-code);">LIVE CUES</p>
+            <button class="hud-btn" style="background: rgba(56, 189, 248, 0.1); border-color: var(--accent); color: var(--accent);" onclick="showAlert('RELAX 🧘', 'cue')"><i class="fa-solid fa-leaf"></i> Breathe / Relax</button>
+            <button class="hud-btn" style="background: rgba(56, 189, 248, 0.1); border-color: var(--accent); color: var(--accent);" onclick="showAlert('CONFIDENCE ✨', 'cue')"><i class="fa-solid fa-star"></i> Be Confident</button>
+        </div>
+
+        <div style="margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 25px;">
+            <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 15px; font-weight: 700; font-family: var(--font-code);">PRAISE GENERATOR</p>
+            <button class="hud-btn" onclick="showAlert('PERFECT<br>ANSWER!', 'praise')"><i class="fa-solid fa-comment-dots"></i> Perfect Answer</button>
+            <button class="hud-btn" onclick="showAlert('GREAT<br>CONFIDENCE! 🏆', 'praise')"><i class="fa-solid fa-trophy"></i> Great Confidence</button>
+        </div>
+    </div>
+
+    <!-- SMART DICT (WITH SURGICAL VIDEO CUTS) -->
+    <div class="sidebar-panel" id="dict-panel">
+        <button class="sidebar-close" onclick="closeDict()"><i class="fa-solid fa-xmark"></i></button>
+        <p style="font-family: var(--font-code); color: var(--brand-main); font-size: 0.8rem; margin-bottom: 20px; letter-spacing: 2px;">// SMART DICTIONARY</p>
+        <h1 id="d-word" class="dict-word">Word</h1>
+        <span id="d-phonetic" class="dict-phonetic">/phonetic/</span>
+        <div class="dict-def" id="d-def">Definition here.</div>
+        
+        <!-- Video Context Area -->
+        <div id="d-video-wrapper">
+            <iframe id="d-video" src="" allow="autoplay; fullscreen"></iframe>
+        </div>
+
+        <div style="margin-top: 30px; padding: 25px; background: rgba(255,255,255,0.03); border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);">
+            <p style="font-size: 0.9rem; text-align: left; color: var(--brand-main); font-weight: 800; text-transform: uppercase;">Real Context:</p>
+            <p id="d-ex" style="text-align: left; font-style: italic; margin-top: 10px; font-size: 1.1rem; color: #cbd5e1;"></p>
+        </div>
+        
+        <div id="dict-hub-container" style="display: none; margin-top: 30px; background: rgba(0,0,0,0.6); padding: 25px; border-radius: 15px; border: 1px solid var(--accent); position: relative;">
+            <span style="position: absolute; top: -12px; left: 20px; background: var(--accent); color: #000; padding: 4px 10px; font-weight: 800; border-radius: 5px; font-size: 0.8rem;">🎙️ LET'S TALK</span>
+            <p id="d-speak" style="color: #fff; font-size: 1.2rem; font-weight: 600; line-height: 1.5; margin: 0; text-align: left;"></p>
+        </div>
+    </div>
+
+    <main class="main-container" id="slides-container">
+
+        <!-- 1. ADMIN -->
+        <div class="slide active">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-user-shield"></i> ADMIN PROTOCOL</h2>
+                <div style="background: rgba(250, 204, 21, 0.1); border: 1px solid var(--brand-main); padding: 30px; border-radius: 20px; text-align: left; width: 100%; max-width: 800px;">
+                    <p style="text-align: left; margin-bottom: 12px; font-size: 1.2rem;"><strong>LEVEL:</strong> A2 (Pre-Intermediate)</p>
+                    <p style="text-align: left; margin-bottom: 12px; font-size: 1.2rem;"><strong>TOPIC:</strong> Airport Immigration & Travel</p>
+                    <p style="text-align: left; margin-bottom: 12px; font-size: 1.2rem;"><strong>CORE VOCAB:</strong> Passport, Visa, Customs, Purpose, Vacation.</p>
+                    <p style="text-align: left; margin-bottom: 12px; font-size: 1.2rem;"><strong>GRAMMAR FOCUS:</strong> Travel Plans (Going to vs Present Continuous).</p>
+                    <p style="text-align: left; font-size: 1.2rem; color: var(--brand-main); margin-bottom: 0;"><strong>LESSON FLOW:</strong> 26 Immersive Pages. From Visual Input ➔ Grammar ➔ Speaking Challenges ➔ Deep Conversation Arena.</p>
+                </div>
+                <div style="margin-top: 30px; background: rgba(0,0,0,0.4); padding: 25px; border-radius: 15px; border-left: 4px solid var(--brand-main); text-align: left; width: 100%; max-width: 800px;">
+                    <p style="color: var(--text-dim); font-family: var(--font-code); font-size: 1.1rem; line-height: 1.6; margin: 0;">
+                        <span style="color: var(--brand-main); font-weight: 800;">// PRO TIPS FOR TEACHERS:</span><br><br>
+                        This lesson focuses on building confidence for international travel. Use the <strong>Teacher HUD</strong> to send "Relax" and "Confidence" cues. In the final Arena roleplay, practice the exact questions students will hear at Immigration to prepare them for real-life scenarios.
+                    </p>
+                </div>
+                <button class="btn-start" style="margin-top: 30px;" onclick="window.nextSlide()">INITIALIZE LESSON</button>
+            </div>
+        </div>
+
+        <!-- 2. COVER -->
+        <div class="slide">
+            <div class="glass-panel" style="text-align: center; border: none; background: transparent; box-shadow: none;">
+                <div style="font-size: 8rem; color: var(--brand-main); filter: drop-shadow(0 0 30px var(--accent-glow)); animation: pulse 3s infinite; margin-bottom: 20px;">
+                    <i class="fa-solid fa-passport"></i>
+                </div>
+                <h1 style="font-size: 5.5rem; letter-spacing: -1px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+                    AIRPORT<br><span style="color: var(--brand-main);">IMMIGRATION</span>
+                </h1>
+                <p style="font-size: 1.5rem; letter-spacing: 5px; color: var(--accent); font-weight: 800; margin-bottom: 40px;">A2 MASTERCLASS</p>
+                <button class="btn-start" style="font-size: 1.5rem; padding: 25px 60px;" onclick="window.nextSlide()">START FLIGHT <i class="fa-solid fa-plane-departure" style="margin-left: 10px;"></i></button>
+            </div>
+        </div>
+
+        <!-- 3. ICEBREAKER -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-fire"></i> ICEBREAKER</h2>
+                <p style="font-size: 1.8rem;">Are you nervous when you go to the airport?</p>
+                <div class="ww-grid">
+                    <button class="btn-start" style="background: rgba(0,0,0,0.6); border: 1px solid var(--accent); color: #fff;" onclick="document.getElementById('hub-ice').style.display='block'">YES, A LOT!</button>
+                    <button class="btn-start" style="background: rgba(0,0,0,0.6); border: 1px solid var(--brand-main); color: #fff;" onclick="document.getElementById('hub-ice').style.display='block'">NO, I AM RELAXED</button>
+                </div>
+                <div class="speaking-hub" id="hub-ice">
+                    <p><strong>TEACHER:</strong> "It is completely normal to be nervous! Today we will practice everything so you feel 100% confident."</p>
+                    <button class="starter-reveal-btn" onclick="window.revealStarter(this)"><i class="fa-solid fa-lightbulb"></i> Show Speaking Starter</button>
+                    <div class="starter-content">
+                        <span class="starter-phrase">"I feel nervous because I am afraid of..."</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. VOCAB 1: OPEN THE BOX -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-box-open"></i> KEY VOCABULARY</h2>
+                <p>Click the boxes to reveal the essential travel words.</p>
+                <div class="ww-grid">
+                    <div class="ww-box" onclick="window.openBox(this, 'Passport', 'btn-v1')">
+                        <i class="fa-solid fa-id-card"></i><span style="font-family: var(--font-code); color: var(--text-dim); font-size: 1.2rem;">1</span>
+                    </div>
+                    <div class="ww-box" onclick="window.openBox(this, 'Customs', 'btn-v1')">
+                        <i class="fa-solid fa-suitcase"></i><span style="font-family: var(--font-code); color: var(--text-dim); font-size: 1.2rem;">2</span>
+                    </div>
+                    <div class="ww-box" onclick="window.openBox(this, 'Purpose', 'btn-v1')">
+                        <i class="fa-solid fa-crosshairs"></i><span style="font-family: var(--font-code); color: var(--text-dim); font-size: 1.2rem;">3</span>
+                    </div>
+                </div>
+                <button class="btn-start" style="margin-top: 30px; display: none;" id="btn-v1" onclick="window.nextSlide()">PROCEED</button>
+            </div>
+        </div>
+
+        <!-- 5. VIDEO CHUNK 1 -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-brands fa-youtube"></i> IMMIGRATION RULES</h2>
+                <p>Watch from 0:00 to 3:00. What is the rule when answering questions?</p>
+                <div class="video-wrapper">
+                    <iframe data-src="https://www.youtube-nocookie.com/embed/bMwLASzimjs?start=0&end=180&rel=0&modestbranding=1" allowfullscreen></iframe>
+                </div>
+                <button class="btn-start" onclick="window.nextSlide()">I FINISHED WATCHING</button>
+            </div>
+        </div>
+
+        <!-- 6. VIDEO COMPREHENSION -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-magnifying-glass"></i> VIDEO BREAKDOWN</h2>
+                <p>According to the video, when answering questions you must be...</p>
+                <div class="ww-grid" style="gap: 20px; max-width: 800px; margin-top: 30px;">
+                    <button class="btn-start" style="background: #1e293b; width: 100%; justify-content: flex-start; padding: 25px; color: #fff;" onclick="window.checkOddOne(this, false)"><i class="fa-solid fa-xmark" style="color:var(--incorrect); margin-right:15px; font-size: 1.5rem;"></i> Nervous and tell your whole life story.</button>
+                    <button class="btn-start" style="background: #1e293b; width: 100%; justify-content: flex-start; padding: 25px; color: #fff;" onclick="window.checkOddOne(this, true)"><i class="fa-solid fa-check" style="color:var(--correct); margin-right:15px; font-size: 1.5rem;"></i> Friendly, confident, short and sweet.</button>
+                    <button class="btn-start" style="background: #1e293b; width: 100%; justify-content: flex-start; padding: 25px; color: #fff;" onclick="window.checkOddOne(this, false)"><i class="fa-solid fa-xmark" style="color:var(--incorrect); margin-right:15px; font-size: 1.5rem;"></i> Angry and completely silent.</button>
+                </div>
+                <div class="speaking-hub" id="p_odd" style="display:none; text-align: left; width: 100%; margin-top: 20px;">
+                    <p><strong>TEACHER:</strong> "Exactly! Short and sweet. Do you think it is easy to be short and sweet when you are nervous?"</p>
+                    <button class="btn-start" style="margin-top: 20px;" onclick="window.nextSlide()">CONTINUE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. GRAMMAR BLUEPRINT -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-book-atlas"></i> GRAMMAR BLUEPRINT</h2>
+                <p style="font-size: 1.6rem; margin-bottom: 30px;">Talking about Travel Plans ✈️</p>
+                
+                <div style="display: flex; gap: 20px; width: 100%; max-width: 900px; flex-wrap: wrap;">
+                    <!-- GOING TO -->
+                    <div style="flex: 1; min-width: 280px; background: rgba(0,0,0,0.5); border: 2px solid var(--brand-main); border-radius: 20px; padding: 30px; text-align: left; position: relative;">
+                        <span style="position: absolute; top: -15px; left: 20px; background: var(--brand-main); color: #000; padding: 5px 15px; font-weight: 900; font-family: var(--font-code); border-radius: 8px;">1. GOING TO</span>
+                        <p style="color: var(--brand-main); font-size: 1.2rem; font-weight: 700; margin-top: 10px; margin-bottom: 10px;"><i class="fa-solid fa-lightbulb"></i> Intentions & Plans</p>
+                        <p style="color: var(--text-dim); font-size: 1.1rem; margin-bottom: 20px;">Use this when you decided to do something, but maybe it's not 100% booked yet.</p>
+                        <div style="background: rgba(250, 204, 21, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid var(--brand-main);">
+                            <p style="color: #fff; font-weight: 700; margin: 0;">"I am <span style="color: var(--brand-main);">going to</span> visit Paris."</p>
+                        </div>
+                    </div>
+
+                    <!-- PRESENT CONTINUOUS -->
+                    <div style="flex: 1; min-width: 280px; background: rgba(0,0,0,0.5); border: 2px solid var(--accent); border-radius: 20px; padding: 30px; text-align: left; position: relative;">
+                        <span style="position: absolute; top: -15px; left: 20px; background: var(--accent); color: #000; padding: 5px 15px; font-weight: 900; font-family: var(--font-code); border-radius: 8px;">2. PRESENT CONTINUOUS</span>
+                        <p style="color: var(--accent); font-size: 1.2rem; font-weight: 700; margin-top: 10px; margin-bottom: 10px;"><i class="fa-solid fa-calendar-check"></i> Fixed Arrangements</p>
+                        <p style="color: var(--text-dim); font-size: 1.1rem; margin-bottom: 20px;">Use this for 100% confirmed plans, like flights or hotel reservations.</p>
+                        <div style="background: rgba(56, 189, 248, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid var(--accent);">
+                            <p style="color: #fff; font-weight: 700; margin: 0;">"I am <span style="color: var(--accent);">flying</span> to Paris tomorrow."</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="speaking-hub" style="display:block; text-align: left; width: 100%; margin-top: 30px;">
+                    <p><strong>TEACHER:</strong> "Are you going to travel soon? Do you have any flights booked?"</p>
+                    <button class="starter-reveal-btn" onclick="window.revealStarter(this)"><i class="fa-solid fa-lightbulb"></i> Show Speaking Starter</button>
+                    <div class="starter-content">
+                        <span class="starter-title">Student Starter</span>
+                        <span class="starter-phrase">"Yes, I am going to travel to... I am flying on..."</span>
+                    </div>
+                </div>
+
+                <button class="btn-start" style="margin-top: 30px;" onclick="window.nextSlide()">PRACTICE IT</button>
+            </div>
+        </div>
+
+        <!-- 8. GRAMMAR SANDBOX -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-sliders"></i> GRAMMAR SANDBOX</h2>
+                <p style="font-size: 1.6rem; margin-bottom: 40px;">How do we talk about our travel plans?</p>
+                <div class="grammar-switch">
+                    <button class="switch-btn active" onclick="window.switchGrammar(this, 'I AM GOING TO stay for two weeks.', 'FIXED PLAN', 'sandbox-sentence-1', 'sandbox-rule-1')">Going To</button>
+                    <button class="switch-btn" onclick="window.switchGrammar(this, 'I AM STAYING for two weeks.', 'FIXED ARRANGEMENT', 'sandbox-sentence-1', 'sandbox-rule-1')">Continuous</button>
+                </div>
+                <div class="sandbox-display">
+                    <div id="sandbox-rule-1" style="color: var(--brand-main); font-size: 1.2rem; letter-spacing: 2px; font-weight: 800; font-family: var(--font-code); margin-bottom: 10px;">FIXED PLAN</div>
+                    <span id="sandbox-sentence-1" style="color: #fff; font-size: 2.5rem; font-weight: 700; line-height: 1.4;">I <span style="color:var(--brand-main);">AM GOING TO</span> stay for two weeks.</span>
+                </div>
+                <div class="speaking-hub" style="display:block; text-align: left; width: 100%; margin-top: 30px;">
+                    <p><strong>TEACHER:</strong> Ask the student to create one original sentence for each structure.</p>
+                </div>
+                <button class="btn-start" style="margin-top: 30px;" onclick="window.nextSlide()">I UNDERSTAND</button>
+            </div>
+        </div>
+
+        <!-- 9. SYNTAX BUILDER -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-wrench"></i> BUILD THE SENTENCE</h2>
+                <p>Reorder the words to answer the Immigration Officer.</p>
+                <div class="drop-zone" id="dz-1"></div>
+                <div class="ww-grid" style="gap: 15px; margin-top: 0;">
+                    <span class="word-chip" onclick="window.moveWord(this, 'dz-1', 'I,am,going,to,stay,for,three,weeks.')">stay</span>
+                    <span class="word-chip" onclick="window.moveWord(this, 'dz-1', 'I,am,going,to,stay,for,three,weeks.')">three</span>
+                    <span class="word-chip" onclick="window.moveWord(this, 'dz-1', 'I,am,going,to,stay,for,three,weeks.')">I</span>
+                    <span class="word-chip" onclick="window.moveWord(this, 'dz-1', 'I,am,going,to,stay,for,three,weeks.')">going</span>
+                    <span class="word-chip" onclick="window.moveWord(this, 'dz-1', 'I,am,going,to,stay,for,three,weeks.')">weeks.</span>
+                    <span class="word-chip" onclick="window.moveWord(this, 'dz-1', 'I,am,going,to,stay,for,three,weeks.')">to</span>
+                    <span class="word-chip" onclick="window.moveWord(this, 'dz-1', 'I,am,going,to,stay,for,three,weeks.')">for</span>
+                    <span class="word-chip" onclick="window.moveWord(this, 'dz-1', 'I,am,going,to,stay,for,three,weeks.')">am</span>
+                </div>
+                <div class="speaking-hub" id="hub-syn">
+                    <p><strong>TEACHER:</strong> "Excellent! Now, for your real trip, how long are you going to stay?"</p>
+                    <button class="starter-reveal-btn" onclick="window.revealStarter(this)"><i class="fa-solid fa-lightbulb"></i> Show Speaking Starter</button>
+                    <div class="starter-content">
+                        <span class="starter-phrase">"I am going to stay for [number] days/weeks."</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. VOCAB 2: SURGICAL VIDEO DICT -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-tags"></i> IMMIGRATION EXPLORER</h2>
+                <p>Click a word to see the exact moment it appears in the video!</p>
+                
+                <div class="ww-grid" style="gap: 25px; margin-top: 30px; max-width: 800px;">
+                    <div class="ww-box" onclick="window.openBox(this, 'Visa', 'btn-v2')">
+                        <i class="fa-solid fa-stamp" style="font-size: 3.5rem;"></i>
+                        <span style="font-family: var(--font-code); font-weight: 700; margin-top: 10px; color: #fff;">VISA</span>
+                    </div>
+                    <div class="ww-box" onclick="window.openBox(this, 'Red Flag', 'btn-v2')">
+                        <i class="fa-solid fa-flag" style="font-size: 3.5rem; color: var(--incorrect);"></i>
+                        <span style="font-family: var(--font-code); font-weight: 700; margin-top: 10px; color: #fff; text-align: center;">RED FLAG</span>
+                    </div>
+                    <div class="ww-box" onclick="window.openBox(this, 'Ticket', 'btn-v2')">
+                        <i class="fa-solid fa-ticket" style="font-size: 3.5rem;"></i>
+                        <span style="font-family: var(--font-code); font-weight: 700; margin-top: 10px; color: #fff; text-align: center;">TICKET</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; color: var(--text-dim); font-size: 1.1rem; font-style: italic;">(The Smart Dict will open and play the exact scene for each word).</div>
+                <button class="btn-start" style="margin-top: 30px; display: none;" id="btn-v2" onclick="window.nextSlide()">NEXT STEP</button>
+            </div>
+        </div>
+
+        <!-- 11. THE SORTING SCALE -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-scale-balanced"></i> THE IMMIGRATION SORTER</h2>
+                <p>Good idea or Bad idea? Sort the actions at immigration!</p>
+                
+                <div class="scale-container">
+                    <div class="scale-display" id="scale-display">HAVE YOUR HOTEL RESERVATION</div>
+                    <div class="scale-controls">
+                        <button class="scale-btn" style="border-color: var(--correct); color: var(--correct);" onclick="window.weighItem('GOOD')">GOOD IDEA</button>
+                        <button class="scale-btn" style="border-color: var(--incorrect); color: var(--incorrect);" onclick="window.weighItem('BAD')">BAD IDEA</button>
+                    </div>
+                    <div class="scale-baskets">
+                        <div class="basket" id="basket-good" data-label="DO THIS"></div>
+                        <div class="basket" id="basket-bad" data-label="DON'T DO THIS"></div>
+                    </div>
+                </div>
+
+                <div class="speaking-hub" id="hub-scale">
+                    <p><strong>TEACHER:</strong> "Great job sorting! Always be prepared and confident."</p>
+                    <button class="btn-start" style="margin-top: 15px;" onclick="window.nextSlide()">NEXT</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 12. VIDEO CHUNK 2 -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-brands fa-youtube"></i> ACCOMMODATION & WORK</h2>
+                <p>Watch from 3:00 to 6:00. What is the question about occupation?</p>
+                <div class="video-wrapper">
+                    <iframe data-src="https://www.youtube-nocookie.com/embed/bMwLASzimjs?start=180&end=360&rel=0&modestbranding=1" allowfullscreen></iframe>
+                </div>
+                <div class="speaking-hub" style="display:block; margin-top: 20px;">
+                    <p><strong>TEACHER:</strong> "When you travel, do you prefer staying in hotels or Airbnbs? Why?"</p>
+                    <button class="starter-reveal-btn" onclick="window.revealStarter(this)"><i class="fa-solid fa-lightbulb"></i> Show Speaking Starter</button>
+                    <div class="starter-content">
+                        <span class="starter-phrase">"I prefer staying in a hotel because..."</span>
+                    </div>
+                </div>
+                <button class="btn-start" style="margin-top: 20px;" onclick="window.nextSlide()">CONTINUE</button>
+            </div>
+        </div>
+
+        <!-- 13. TEXTING SCENARIO -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-brands fa-whatsapp"></i> ARRIVAL UPDATE</h2>
+                <p>You arrived at your destination! Text your mom to calm her down.</p>
+                <div class="phone-ui">
+                    <div class="phone-notch"></div>
+                    <div class="phone-top-bar"><i class="fa-solid fa-user" style="color:var(--brand-main); margin-right:8px;"></i> Mom</div>
+                    <div class="phone-chat-area">
+                        <div class="phone-msg received">Honey! Are you out of immigration? Did they ask many questions?</div>
+                        <div class="typing-indicator" id="typing-dot-1">
+                            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                        </div>
+                    </div>
+                    <div class="phone-options-area" id="chat-opts-1">
+                        <button class="phone-opt-btn" onclick="window.advanceChat(this, false, 'chat-opts-1', 'typing-dot-1')">Yes! I have very nervous.</button>
+                        <button class="phone-opt-btn" onclick="window.advanceChat(this, true, 'chat-opts-1', 'typing-dot-1', 'p_text1')">Yes! It was fast. They asked where I will stay.</button>
+                    </div>
+                </div>
+                <div class="speaking-hub" id="p_text1" style="display:none; margin-top:20px; text-align: left; width: 100%; max-width: 400px;">
+                    <p><strong>TEACHER:</strong> "Excellent message! So, where are you going to stay on your trip?"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 14. THE TRUTH BOARD -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-list-check"></i> THE TRUTH BOARD</h2>
+                <p>Are these facts True or False according to the video?</p>
+                <div class="truth-board">
+                    <div class="truth-row" id="tr-1">
+                        <span class="truth-text">1. You should have a place to stay lined up (hotel/Airbnb).</span>
+                        <div class="tf-btns">
+                            <button class="tf-btn t-btn" onclick="window.checkTruth(this, 'tr-1', true, true)">TRUE</button>
+                            <button class="tf-btn f-btn" onclick="window.checkTruth(this, 'tr-1', false, true)">FALSE</button>
+                        </div>
+                    </div>
+                    <div class="truth-row" id="tr-2">
+                        <span class="truth-text">2. It is bad to say you are unemployed. You should lie.</span>
+                        <div class="tf-btns">
+                            <button class="tf-btn t-btn" onclick="window.checkTruth(this, 'tr-2', true, false)">TRUE</button>
+                            <button class="tf-btn f-btn" onclick="window.checkTruth(this, 'tr-2', false, false)">FALSE</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 15. VIDEO CHUNK 3 -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-brands fa-youtube"></i> MONEY & DECLARATIONS</h2>
+                <p>Watch from 6:00 to 10:00. Why do they ask about money?</p>
+                <div class="video-wrapper">
+                    <iframe data-src="https://www.youtube-nocookie.com/embed/bMwLASzimjs?start=360&end=600&rel=0&modestbranding=1" allowfullscreen></iframe>
+                </div>
+                <div class="speaking-hub" style="display:block; margin-top: 20px;">
+                    <p><strong>TEACHER:</strong> "Do you usually travel with a lot of cash or just credit cards?"</p>
+                    <button class="starter-reveal-btn" onclick="window.revealStarter(this)"><i class="fa-solid fa-lightbulb"></i> Show Speaking Starter</button>
+                    <div class="starter-content">
+                        <span class="starter-phrase">"I usually carry credit cards because it is safer."</span>
+                    </div>
+                </div>
+                <button class="btn-start" style="margin-top: 20px;" onclick="window.nextSlide()">CONTINUE</button>
+            </div>
+        </div>
+
+        <!-- 16. NEW: IMMIGRATION SIMULATOR -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-user-shield"></i> IMMIGRATION SIMULATOR</h2>
+                <p>Choose the best answer to pass the Immigration Officer!</p>
+                
+                <div class="quiz-container" id="immi-quiz" style="width: 100%; max-width: 800px; margin-top: 20px;">
+                    <div class="quiz-step active" id="iq-1">
+                        <div class="quiz-q" style="font-size: 2rem; color: var(--brand-main); border-left: 4px solid var(--brand-main); padding-left: 20px; text-align: left; background: rgba(0,0,0,0.5); padding: 30px; border-radius: 15px;">Officer: "What is the purpose of your visit?"</div>
+                        <div class="quiz-options" style="flex-direction: column; gap: 15px;">
+                            <div class="quiz-opt" style="text-align: left;" onclick="window.answerIq(false, 1)"><i class="fa-solid fa-briefcase" style="color:var(--incorrect); margin-right: 15px;"></i> I am looking for a job.</div>
+                            <div class="quiz-opt" style="text-align: left;" onclick="window.answerIq(true, 1)"><i class="fa-solid fa-camera" style="color:var(--correct); margin-right: 15px;"></i> I am here on vacation.</div>
+                        </div>
+                    </div>
+                    <div class="quiz-step" id="iq-2">
+                        <div class="quiz-q" style="font-size: 2rem; color: var(--brand-main); border-left: 4px solid var(--brand-main); padding-left: 20px; text-align: left; background: rgba(0,0,0,0.5); padding: 30px; border-radius: 15px;">Officer: "How long do you intend to stay?"</div>
+                        <div class="quiz-options" style="flex-direction: column; gap: 15px;">
+                            <div class="quiz-opt" style="text-align: left;" onclick="window.answerIq(true, 2)"><i class="fa-solid fa-calendar-days" style="color:var(--correct); margin-right: 15px;"></i> I am staying for two weeks.</div>
+                            <div class="quiz-opt" style="text-align: left;" onclick="window.answerIq(false, 2)"><i class="fa-solid fa-question" style="color:var(--incorrect); margin-right: 15px;"></i> I don't know. Maybe a month?</div>
+                        </div>
+                    </div>
+                    <div class="quiz-step" id="iq-3">
+                        <div class="quiz-q" style="font-size: 2rem; color: var(--brand-main); border-left: 4px solid var(--brand-main); padding-left: 20px; text-align: left; background: rgba(0,0,0,0.5); padding: 30px; border-radius: 15px;">Officer: "Where will you be staying?"</div>
+                        <div class="quiz-options" style="flex-direction: column; gap: 15px;">
+                            <div class="quiz-opt" style="text-align: left;" onclick="window.answerIq(false, 3)"><i class="fa-solid fa-bed" style="color:var(--incorrect); margin-right: 15px;"></i> I will find a hotel later.</div>
+                            <div class="quiz-opt" style="text-align: left;" onclick="window.answerIq(true, 3)"><i class="fa-solid fa-hotel" style="color:var(--correct); margin-right: 15px;"></i> At the Hilton Hotel downtown.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="quiz-result" id="iq-result" style="display: none;">
+                        <i class="fa-solid fa-stamp" style="font-size: 6rem; color: var(--correct); margin-bottom: 20px; filter: drop-shadow(0 0 20px var(--correct));"></i>
+                        <h3 style="font-family: var(--font-display); font-size: 2.5rem; color: var(--correct); margin-bottom: 15px;">PASSPORT STAMPED!</h3>
+                        <p style="font-size: 1.3rem; color: #fff; line-height: 1.5; margin-bottom: 30px;">Welcome to the country! You answered all questions perfectly.</p>
+                        
+                        <div class="speaking-hub" id="hub-iq" style="display:block; text-align: left; width: 100%; margin-bottom: 30px;">
+                            <p><strong>TEACHER:</strong> "Great job! Why is saying 'I don't know' a bad idea?"</p>
+                            <button class="starter-reveal-btn" onclick="window.revealStarter(this)"><i class="fa-solid fa-lightbulb"></i> Show Speaking Starter</button>
+                            <div class="starter-content">
+                                <span class="starter-phrase">"It is a bad idea because the officer wants to know your exact plan."</span>
+                            </div>
+                        </div>
+
+                        <button class="btn-start" onclick="window.nextSlide()">CONTINUE</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 17. ODD ONE OUT -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-object-ungroup"></i> ODD ONE OUT</h2>
+                <p style="margin-bottom: 20px;">Which question do immigration officers <strong style="color:var(--incorrect);">NOT</strong> ask?</p>
+                
+                <div class="odd-grid">
+                    <button class="odd-btn" onclick="window.checkOddOne(this, false)">Where are you staying?</button>
+                    <button class="odd-btn" onclick="window.checkOddOne(this, false)">What is your occupation?</button>
+                    <button class="odd-btn" onclick="window.checkOddOne(this, true)">What is your favorite movie?</button>
+                    <button class="odd-btn" onclick="window.checkOddOne(this, false)">How much money do you have?</button>
+                </div>
+
+                <div class="speaking-hub" id="p_odd_2" style="display:none; text-align: left; width: 100%;">
+                    <p>Teacher: "Exactly! They don't care about movies. They care about safety and rules."</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 18. ACTION SPINNER -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-bolt"></i> AIRPORT SCENARIOS</h2>
+                <p style="margin-bottom: 30px;">Spin to get a situation. What do you say in English?</p>
+                
+                <div class="slot-machine">
+                    <div id="slot-display" class="slot-display">SPIN ME</div>
+                </div>
+                <button class="btn-start" onclick="window.spinSlot()" style="margin-bottom: 20px;">SPIN</button>
+
+                <div class="speaking-hub" id="p_slot" style="display:none; text-align: left; width: 100%;">
+                    <p>Teacher: Help the student describe what they would do or say in this scenario.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 19. PICTURE REVEAL -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-image"></i> BAGGAGE CLAIM</h2>
+                <p style="margin-bottom: 30px;">Click the tiles to reveal the picture. Describe the situation!</p>
+                
+                <div class="reveal-area">
+                    <div class="reveal-grid" id="reveal-grid">
+                        <div class="reveal-tile" onclick="window.removeTile(this)" style="pointer-events: auto;">1</div>
+                        <div class="reveal-tile" onclick="window.removeTile(this)" style="pointer-events: auto;">2</div>
+                        <div class="reveal-tile" onclick="window.removeTile(this)" style="pointer-events: auto;">3</div>
+                        <div class="reveal-tile" onclick="window.removeTile(this)" style="pointer-events: auto;">4</div>
+                        <div class="reveal-tile" onclick="window.removeTile(this)" style="pointer-events: auto;">5</div>
+                        <div class="reveal-tile" onclick="window.removeTile(this)" style="pointer-events: auto;">6</div>
+                        <div class="reveal-tile" onclick="window.removeTile(this)" style="pointer-events: auto;">7</div>
+                        <div class="reveal-tile" onclick="window.removeTile(this)" style="pointer-events: auto;">8</div>
+                        <div class="reveal-tile" onclick="window.removeTile(this)" style="pointer-events: auto;">9</div>
+                    </div>
+                </div>
+
+                <div class="speaking-hub" id="p_reveal" style="display:none; text-align: left; width: 100%;">
+                    <p>Teacher: "It's the baggage claim! Have you ever lost your luggage at the airport?"</p>
+                    <button class="starter-reveal-btn" onclick="window.revealStarter(this)"><i class="fa-solid fa-lightbulb"></i> Show Speaking Starter</button>
+                    <div class="starter-content">
+                        <span class="starter-phrase">"Yes, once I lost my bag... / No, I never lost my luggage."</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 20. TOPIC CARDS -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-clone"></i> PICK A TOPIC</h2>
+                <p>Click a card for a conversation question!</p>
+                <div class="topic-grid">
+                    <div class="t-card" onclick="window.flipTopic(this, 'What is the best country you have ever visited?', 'The best country was... because...')">
+                        <div class="t-front"></div>
+                        <div class="t-back"></div>
+                    </div>
+                    <div class="t-card" onclick="window.flipTopic(this, 'Do you prefer to pack light (1 bag) or take many suitcases?', 'I prefer to pack... because...')">
+                        <div class="t-front"></div>
+                        <div class="t-back"></div>
+                    </div>
+                    <div class="t-card" onclick="window.flipTopic(this, 'Are you nervous about speaking English on this trip?', 'Yes, a little bit. / No, I feel confident.')">
+                        <div class="t-front"></div>
+                        <div class="t-back"></div>
+                    </div>
+                </div>
+                <div class="speaking-hub" id="p_cards" style="display:none; text-align: left; width: 100%; margin-top: 30px;">
+                    <p>Teacher: Let the student answer the question naturally.</p>
+                    <button class="starter-reveal-btn" onclick="window.revealStarter(this)"><i class="fa-solid fa-lightbulb"></i> Show Speaking Starter</button>
+                    <div class="starter-content">
+                        <span class="starter-title">Student Starter</span>
+                        <span class="starter-phrase" id="cards-starter-phrase">"..."</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 21. WOULD YOU RATHER -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-code-branch"></i> WOULD YOU RATHER?</h2>
+                <p>Choose your preferred airplane seat.</p>
+                <div class="wyr-container">
+                    <div class="wyr-card" onclick="window.selectWyr(this)">
+                        <i class="fa-solid fa-window-maximize"></i>
+                        <p style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; margin:0;">The Window Seat.</p>
+                    </div>
+                    <div class="wyr-card" onclick="window.selectWyr(this)">
+                        <i class="fa-solid fa-people-arrows"></i>
+                        <p style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; margin:0;">The Aisle Seat.</p>
+                    </div>
+                </div>
+                <div class="speaking-hub" id="hub-wyr" style="display:none; text-align: left; width: 100%;">
+                    <p>Teacher: Ask the student "Why did you choose that seat?"</p>
+                    <button class="starter-reveal-btn" onclick="window.revealStarter(this)"><i class="fa-solid fa-lightbulb"></i> Show Speaking Starter</button>
+                    <div class="starter-content">
+                        <span class="starter-phrase">"I prefer the window because I like the view / the aisle because I can stand up."</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 22. STAND YOUR GROUND -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-balance-scale"></i> STAND YOUR GROUND</h2>
+                <p>What is your opinion on this statement?</p>
+                <div style="background: rgba(0,0,0,0.6); padding: 50px; border-radius: 20px; font-size: 2.5rem; font-weight: 900; margin-bottom: 30px; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); text-align: center; border: 1px dashed var(--glass-border);">
+                    "Airports are the most stressful places in the world."
+                </div>
+                <div class="agree-container" id="agree-box">
+                    <button class="agree-btn disagree" onclick="window.selectAgree(this)">DISAGREE</button>
+                    <button class="agree-btn neutral" onclick="window.selectAgree(this)">NEUTRAL</button>
+                    <button class="agree-btn agree" onclick="window.selectAgree(this)">AGREE</button>
+                </div>
+                <div class="speaking-hub" id="hub-agree" style="display:none; text-align: left; width: 100%;">
+                    <p>Teacher: Encourage the student. Remind them that preparation (like this lesson!) eliminates stress.</p>
+                    <button class="starter-reveal-btn" onclick="window.revealStarter(this)"><i class="fa-solid fa-lightbulb"></i> Show Speaking Starter</button>
+                    <div class="starter-content">
+                        <span class="starter-phrase">"I agree because there are many rules. / I disagree, I think it's exciting!"</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 23. QUICK THINKER -->
+        <div class="slide">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-stopwatch"></i> QUICK THINKER</h2>
+                <p>Click randomize and name 3 things you have in your suitcase!</p>
+                
+                <div class="slot-machine" style="height: 120px;">
+                    <div id="category-display" class="slot-display" style="font-size: 2.5rem;">CLOTHES</div>
+                </div>
+                <button class="btn-start" onclick="window.spinCategory(this)" style="margin-bottom: 20px;">RANDOMIZE</button>
+
+                <div class="n3-checks-container" id="n3-checks">
+                    <div class="n3-circle" onclick="window.checkN3(this)">1</div>
+                    <div class="n3-circle" onclick="window.checkN3(this)">2</div>
+                    <div class="n3-circle" onclick="window.checkN3(this)">3</div>
+                </div>
+
+                <div class="speaking-hub" id="hub-n3" style="display:none; text-align: left; width: 100%; margin-top:30px;">
+                    <p>Teacher: Click the circles as the student correctly names the 3 items!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 24. THE ARENA: ROLEPLAY -->
+        <div class="slide" data-hub="true">
+            <div class="glass-panel" style="padding: 60px 80px;">
+                <h2><i class="fa-solid fa-users-viewfinder"></i> THE ARENA: IMMIGRATION</h2>
+                <p>Click the card to reveal your role! You are ready for this.</p>
+                <div class="arena-grid">
+                    <div class="arena-card" onclick="this.classList.toggle('flipped'); document.getElementById('p_20_arena').style.display='block'; window.unlockNextManual();">
+                        <div class="arena-card-inner">
+                            <div class="arena-card-front">
+                                <i class="fa-solid fa-plane-arrival"></i>
+                                <h3>THE TOURIST</h3>
+                            </div>
+                            <div class="arena-card-back">
+                                <p>You arrived at the airport. The teacher is the Immigration Officer. Answer the questions short and sweet!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="speaking-hub" id="p_20_arena" style="display:none; width: 100%;">
+                    <p>Teacher: Act as the Officer. Ask: "Passport please. What is the purpose of your visit?"</p>
+                    <button class="starter-reveal-btn" onclick="window.revealStarter(this)"><i class="fa-solid fa-lightbulb"></i> Show Speaking Starter</button>
+                    <div class="starter-content">
+                        <span class="starter-title">Student Starter</span>
+                        <span class="starter-phrase">"Here is my passport. I am here for vacation / tourism."</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 25. FINAL PITCH -->
+        <div class="slide" data-hub="true">
+            <div class="glass-panel">
+                <h2><i class="fa-solid fa-bullhorn"></i> THE FINAL PITCH</h2>
+                <p style="font-size: 1.5rem; margin-bottom: 25px;">You passed immigration! Now tell me about your trip.</p>
+                <div style="background: rgba(0,0,0,0.5); padding: 40px; border-radius: 20px; border: 1px solid var(--brand-main); display: inline-block; text-align: left; box-shadow: inset 0 10px 30px rgba(0,0,0,0.5);">
+                    <h3 style="color:#fff; margin-bottom:20px; text-transform:uppercase; letter-spacing:2px; font-size:1.5rem;">Mission Checklist:</h3>
+                    <ul style="color: #fff; font-size: 1.5rem; margin-left: 20px; line-height: 2;">
+                        <li>Where are you traveling to?</li>
+                        <li>How long <strong style="color:var(--brand-main);">are you going to stay</strong>?</li>
+                        <li>Where <strong style="color:var(--brand-main);">are you going to sleep</strong>?</li>
+                    </ul>
+                </div>
+                <br><br>
+                <button class="btn-start" onclick="document.getElementById('p_21_pitch').style.display='block'; window.unlockNextManual();">START PITCH</button>
+                <div class="speaking-hub" id="p_21_pitch" style="display:none; margin-top: 30px; text-align: left; width: 100%;">
+                    <p>Teacher: Listen and celebrate! She is absolutely ready for her trip! 🎉</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 26. MISSION COMPLETE -->
+        <div class="slide" data-hub="false">
+            <div class="glass-panel" style="padding: 80px 50px;">
+                <i class="fa-solid fa-shield-check" style="font-size: 7rem; color: var(--correct); margin-bottom: 25px; filter: drop-shadow(0 0 30px var(--correct)); animation: popIn 0.8s ease-out;"></i>
+                <h1 style="font-size: 5.5rem; color: var(--correct); line-height: 1.1;">LEVEL CLEARED</h1>
+                <p style="font-size: 1.6rem; color: #a3a3a3; margin-bottom: 40px;">Have a safe flight, <span class="dyn-name">Student</span>!</p>
+                
+                <div style="display: flex; gap: 25px; justify-content: center; flex-wrap: wrap;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; border: 1px solid var(--glass-border); width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <i class="fa-solid fa-passport" style="font-size: 2.5rem; color: var(--brand-main); margin-bottom: 15px;"></i>
+                        <h3 style="color: #fff; font-size: 1.3rem;">TRAVEL SKILLS</h3>
+                        <p style="font-size: 1.1rem; margin:0;">Airport Vocabulary<br>Future Intentions (Going to)</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; border: 1px solid var(--glass-border); width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <i class="fa-solid fa-bolt" style="font-size: 2.5rem; color: var(--brand-main); margin-bottom: 15px;"></i>
+                        <h3 style="color: #fff; font-size: 1.3rem;">CONFIDENCE</h3>
+                        <p style="font-size: 1.1rem; margin:0;">Immigration Interview<br>100% Prepared</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER CONTROLS -->
+    <div class="progress-container" id="progress-container"><div class="progress-bar"></div></div>
+    <div class="footer" id="main-footer">
+        <button class="nav-btn" id="prev-btn" onclick="window.prevSlide()" disabled><i class="fa-solid fa-chevron-left"></i> BACK</button>
+        <div style="display: flex; align-items: center; gap: 25px;">
+            <div id="step-id" style="color: white; font-family: var(--font-code); font-size: 1.2rem; letter-spacing: 2px; font-weight: 700;">PAGE <span style="color: var(--brand-main); font-size: 1.4rem;">1</span> / 26</div>
+            <button class="nav-btn next" id="next-btn" onclick="window.nextSlide()" style="display: flex;">NEXT <i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+
+    <script>
+        // === DICTIONARY DATA ===
+        const vocabData = {
+            'passport': { word: 'Passport', phonetic: '/ˈpæs.pɔːrt/', def: 'An official document containing personal information, needed to travel.', context: 'Here is my passport.', speak: 'Is your passport new or old?' },
+            'customs': { word: 'Customs', phonetic: '/ˈkʌs.təmz/', def: 'The place at a port/airport where officials check incoming goods/people.', context: 'It is important to know these customs and immigration questions.', speak: 'Are you afraid of customs?', vStart: 10, vEnd: 15 },
+            'purpose': { word: 'Purpose', phonetic: '/ˈpɝː.pəs/', def: 'The reason why you do something.', context: 'What is the purpose of your visit?', speak: 'What is the purpose of your trip?', vStart: 35, vEnd: 40 },
+            'visa': { word: 'Visa', phonetic: '/ˈviː.zə/', def: 'An official mark in a passport allowing you to enter a country.', context: 'If your plans match the type of Visa that you have.', speak: 'Do you need a visa to travel?', vStart: 55, vEnd: 62 },
+            'red flag': { word: 'Red flag', phonetic: '/red flæɡ/', def: 'A warning sign of danger or a problem.', context: 'This could raise some red flags.', speak: 'What is a red flag at immigration?', vStart: 108, vEnd: 115 },
+            'ticket': { word: 'Ticket', phonetic: '/ˈtɪk.ɪt/', def: 'A printed piece of paper allowing you to travel.', context: 'Showing that you are leaving the country as well as the date on the plane tickets.', speak: 'Did you buy your flight ticket yet?', vStart: 140, vEnd: 148 }
+        };
+
+        let studentName = "Student";
+
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const currentStepEl = document.getElementById('step-id');
+        const progressBar = document.querySelector('.progress-bar');
+        
+        function update() {
+            slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+            if(prevBtn) prevBtn.disabled = currentSlide === 0;
+            if(currentSlide === slides.length - 1) { if(nextBtn) nextBtn.style.display = 'none'; } 
+            else { if(nextBtn) nextBtn.style.display = 'flex'; }
+
+            if(currentStepEl) currentStepEl.innerHTML = `PAGE <span style="color: var(--brand-main); font-size: 1.4rem;">${currentSlide + 1}</span> / ${slides.length}`;
+            if(progressBar) progressBar.style.width = `${((currentSlide + 1) / slides.length) * 100}%`;
+            
+            if(nextBtn) nextBtn.classList.remove('pulsing');
+
+            slides.forEach((s, i) => {
+                const iframe = s.querySelector('.video-wrapper iframe');
+                if (iframe) {
+                    if (i === currentSlide) {
+                        if (!iframe.src || iframe.src === 'about:blank' || iframe.src === window.location.href) {
+                            iframe.src = iframe.getAttribute('data-src');
+                        }
+                    } else { iframe.src = ''; }
+                }
+            });
+        }
+
+        window.unlockNextManual = function() {
+            const nextButton = document.getElementById('next-btn');
+            if(nextButton) nextButton.classList.add('pulsing');
+        };
+        
+        window.nextSlide = function() { if(currentSlide < slides.length - 1) { currentSlide++; update(); } };
+        window.prevSlide = function() { if(currentSlide > 0) { currentSlide--; update(); } };
+
+        window.saveName = () => {
+            const input = document.getElementById('s-name');
+            if(input && input.value.trim() !== '') studentName = input.value.trim();
+            document.querySelectorAll('.dyn-name').forEach(el => el.innerText = studentName);
+            window.nextSlide();
+        };
+
+        window.revealStarter = function(btn) {
+            btn.style.display = 'none';
+            const content = btn.nextElementSibling;
+            if(content && content.classList.contains('starter-content')) content.classList.add('active');
+        };
+
+        window.openVocab = function(word) {
+            const data = vocabData[word.toLowerCase()];
+            if(!data) return;
+
+            document.getElementById('d-word').innerText = data.word.toUpperCase();
+            document.getElementById('d-phonetic').innerText = data.phonetic;
+            document.getElementById('d-def').innerText = data.def;
+            document.getElementById('d-ex').innerText = `"${data.context}"`;
+            document.getElementById('d-speak').innerText = data.speak || '';
+            
+            const videoWrapper = document.getElementById('d-video-wrapper');
+            const iframe = document.getElementById('d-video');
+            if (data.vStart && data.vEnd) {
+                videoWrapper.style.display = 'block';
+                iframe.src = `https://www.youtube-nocookie.com/embed/bMwLASzimjs?start=${data.vStart}&end=${data.vEnd}&autoplay=1&rel=0&modestbranding=1`;
+            } else {
+                videoWrapper.style.display = 'none';
+                iframe.src = '';
+            }
+
+            document.getElementById('dict-hub-container').style.display = 'block';
+            const mainContainer = document.getElementById('slides-container');
+            mainContainer.style.transform = 'scale(0.95) translateX(-2vw)';
+            document.getElementById('dict-panel').classList.add('right-open');
+        };
+
+        window.closeDict = () => {
+            document.getElementById('dict-panel').classList.remove('right-open');
+            document.getElementById('d-video').src = ''; 
+            document.getElementById('slides-container').style.transform = 'scale(1) translateX(0)';
+        }
+
+        window.openBox = (el, word, nextBtnId) => {
+            el.classList.add('opened');
+            window.openVocab(word);
+            if(nextBtnId) {
+                const btn = document.getElementById(nextBtnId);
+                if(btn) btn.style.display = 'inline-flex';
+            }
+        };
+
+        window.switchGrammar = function(btn, sentence, label, sentenceId, certaintyId) {
+            let siblings = btn.parentElement.children;
+            for(let s of siblings) s.classList.remove('active');
+            btn.classList.add('active');
+            
+            const words = sentence.split(' ');
+            let formatted = words.map(w => {
+                if(w.includes('AM') || w.includes('GOING') || w.includes('TO') || w.includes('STAYING')) return `<span style="color:var(--brand-main);">${w}</span>`;
+                return w;
+            }).join(' ');
+
+            document.getElementById(sentenceId).innerHTML = formatted;
+            document.getElementById(certaintyId).innerText = label;
+        }
+
+        // Skill Sorter (Weighing Scale)
+        const scaleWords = [
+            {w: 'HAVE HOTEL RESERVATION', t: 'GOOD'}, {w: 'BE NERVOUS', t: 'BAD'}, 
+            {w: 'HAVE A RETURN TICKET', t: 'GOOD'}, {w: 'TELL A FAKE STORY', t: 'BAD'}
+        ];
+        let currentScaleIndex = 0;
+        
+        window.weighItem = function(guessType) {
+            if(currentScaleIndex >= scaleWords.length) return;
+            const item = scaleWords[currentScaleIndex];
+            const display = document.getElementById('scale-display');
+            
+            if(guessType === item.t) {
+                const basket = document.getElementById(guessType === 'GOOD' ? 'basket-good' : 'basket-bad');
+                const chip = document.createElement('div');
+                chip.className = 'scale-item-chip';
+                chip.innerText = item.w;
+                basket.appendChild(chip);
+                
+                currentScaleIndex++;
+                if(currentScaleIndex < scaleWords.length) {
+                    display.innerText = scaleWords[currentScaleIndex].w;
+                } else {
+                    display.innerText = "DONE!";
+                    display.style.color = "var(--correct)";
+                    document.getElementById('hub-scale').style.display = 'block';
+                    window.unlockNextManual();
+                }
+            } else {
+                display.style.color = "var(--incorrect)";
+                display.style.animation = 'shake 0.4s';
+                setTimeout(() => { display.style.color = "var(--brand-main)"; display.style.animation = ''; }, 400);
+            }
+        };
+
+
+        /* --- SYNTAX BUILDER --- */
+        window.buildState = {};
+        window.moveWord = function(chip, dzId, targetArrayStr) {
+            if(chip.classList.contains('used')) return;
+            const targetArray = targetArrayStr.split(',');
+            const word = chip.innerText;
+            const dz = document.getElementById(dzId);
+            const newChip = document.createElement('div');
+            newChip.className = 'word-chip'; 
+            newChip.style.background = 'var(--brand-main)';
+            newChip.style.color = '#020617';
+            newChip.innerText = word;
+            if (!chip.id) chip.id = 'chip_' + Math.random().toString(36).substr(2, 9);
+            newChip.dataset.sourceId = chip.id;
+            
+            newChip.onclick = function() {
+                if(dz.classList.contains('success')) return;
+                dz.removeChild(this); document.getElementById(this.dataset.sourceId).classList.remove('used');
+                const idx = window.buildState[dzId].lastIndexOf(this.innerText);
+                if(idx !== -1) window.buildState[dzId].splice(idx, 1);
+            };
+            
+            dz.appendChild(newChip); chip.classList.add('used');
+            if(!window.buildState[dzId]) window.buildState[dzId] = [];
+            window.buildState[dzId].push(word);
+
+            if(window.buildState[dzId].length === targetArray.length) {
+                if(JSON.stringify(window.buildState[dzId]) === JSON.stringify(targetArray)) {
+                    dz.classList.add('success'); 
+                    Array.from(dz.children).forEach(c => { c.style.background = 'var(--correct)'; c.style.color = '#000'; c.style.cursor = 'default'; });
+                    document.getElementById('hub-syn').style.display = 'block';
+                    window.unlockNextManual();
+                } else {
+                    dz.style.borderColor = 'var(--incorrect)'; dz.style.animation = 'shake 0.4s';
+                    setTimeout(() => { dz.innerHTML = ''; dz.style.borderColor = 'rgba(255,255,255,0.2)'; dz.style.animation = ''; window.buildState[dzId] = []; chip.parentElement.querySelectorAll('.word-chip').forEach(c => c.classList.remove('used')); }, 1000);
+                }
+            }
+        }
+
+        /* --- PHONE SIMULATOR --- */
+        window.advanceChat = function(btn, isCorrect, optsId, dotId, promptId) {
+            if(!isCorrect) {
+                btn.style.backgroundColor = 'var(--incorrect)'; btn.style.borderColor = 'var(--incorrect)'; btn.style.animation = 'shake 0.4s';
+                setTimeout(() => { btn.style.backgroundColor = 'rgba(30, 41, 59, 0.8)'; btn.style.borderColor = 'rgba(255,255,255,0.1)'; btn.style.animation = ''; }, 800);
+                return;
+            }
+            const text = btn.innerText;
+            const optsContainer = document.getElementById(optsId);
+            const chatArea = optsContainer.previousElementSibling;
+            optsContainer.innerHTML = '';
+            
+            const sentMsg = document.createElement('div');
+            sentMsg.className = 'phone-msg sent';
+            sentMsg.style.display = 'block';
+            sentMsg.innerText = text;
+            
+            const typingDot = document.getElementById(dotId);
+            if(typingDot) { chatArea.insertBefore(sentMsg, typingDot); typingDot.style.display = 'none'; } else { chatArea.appendChild(sentMsg); }
+            chatArea.scrollTop = chatArea.scrollHeight;
+            if(promptId) setTimeout(() => { document.getElementById(promptId).style.display = 'block'; window.unlockNextManual(); }, 500); 
+        };
+
+        /* --- IMMIGRATION SIMULATOR --- */
+        window.answerIq = function(isCorrect, step) {
+            const currentStep = document.getElementById('iq-' + step);
+            if (!isCorrect) {
+                currentStep.style.animation = 'shake 0.4s';
+                setTimeout(() => currentStep.style.animation = '', 400);
+                window.showAlert('RED FLAG! 🚩', 'error');
+                return;
+            }
+            
+            currentStep.classList.remove('active');
+            const nextStep = document.getElementById('iq-' + (step + 1));
+            if (nextStep) {
+                nextStep.classList.add('active');
+            } else {
+                document.getElementById('iq-result').style.display = 'block';
+                window.unlockNextManual();
+            }
+        }
+
+        /* --- ODD ONE OUT --- */
+        window.checkOddOne = function(btn, isCorrect) {
+            if(btn.parentElement.classList.contains('solved')) return;
+
+            if(isCorrect) {
+                btn.classList.add('correct');
+                btn.parentElement.classList.add('solved');
+                
+                Array.from(btn.parentElement.children).forEach(child => {
+                    if(child !== btn) child.classList.add('dimmed');
+                });
+
+                document.getElementById('p_odd').style.display = 'block';
+                // also handles p_odd_2
+                const pOdd2 = document.getElementById('p_odd_2');
+                if (pOdd2) pOdd2.style.display = 'block';
+                window.unlockNextManual();
+            } else {
+                btn.classList.add('wrong');
+                setTimeout(() => btn.classList.remove('wrong'), 400);
+            }
+        }
+
+        /* --- ACTION SPINNER --- */
+        window.spinSlot = function() {
+            const scenarios = ["LOST PASSPORT", "MISSED FLIGHT", "LUGGAGE LOST", "CANNOT FIND GATE", "FORGOT HOTEL NAME"];
+            const display = document.getElementById('slot-display');
+            let count = 0;
+            const btn = event.target;
+            btn.disabled = true;
+            display.style.color = "#fff";
+            display.style.transform = "scale(1)";
+
+            const interval = setInterval(() => {
+                display.innerText = scenarios[Math.floor(Math.random() * scenarios.length)];
+                count++;
+                if(count > 20) {
+                    clearInterval(interval);
+                    display.style.color = "var(--brand-main)";
+                    display.style.transform = "scale(1.1)";
+                    document.getElementById('p_slot').style.display = 'block';
+                    btn.disabled = false;
+                    window.unlockNextManual();
+                }
+            }, 100);
+        }
+
+        /* --- PICTURE REVEAL --- */
+        let tilesRemoved = 0;
+        window.removeTile = function(tile) {
+            if(tile.style.opacity === '0') return;
+            tile.style.opacity = '0';
+            tile.style.pointerEvents = 'none'; 
+            tilesRemoved++;
+            if(tilesRemoved >= 9) {
+                document.getElementById('p_reveal').style.display = 'block';
+                window.unlockNextManual();
+            }
+        }
+
+        window.checkTruth = function(btn, rowId, isTrueBtn, expectedTrue) {
+            const row = document.getElementById(rowId);
+            if(row.classList.contains('solved-true') || row.classList.contains('solved-false')) return;
+            if(isTrueBtn === expectedTrue) {
+                row.classList.add(isTrueBtn ? 'solved-true' : 'solved-false');
+                window.unlockNextManual();
+            } else {
+                row.style.animation = 'shake 0.4s';
+                setTimeout(() => row.style.animation = '', 400);
+            }
+        }
+
+        window.flipTopic = function(card, topicText, starterText) {
+            if(card.classList.contains('flipped')) return;
+            card.querySelector('.t-back').innerText = topicText;
+            card.classList.add('flipped');
+            document.getElementById('cards-starter-phrase').innerText = `"${starterText}"`;
+            setTimeout(() => { 
+                document.getElementById('p_cards').style.display = 'block'; 
+                window.unlockNextManual();
+            }, 600);
+        }
+
+        window.selectWyr = function(card) {
+            const container = card.parentElement;
+            if(container.classList.contains('locked')) return;
+
+            card.classList.add('selected');
+            container.classList.add('locked');
+            
+            document.getElementById('hub-wyr').style.display = 'block';
+            window.unlockNextManual();
+        }
+
+        window.selectAgree = function(btn) {
+            const container = document.getElementById('agree-box');
+            if(container.classList.contains('locked')) return;
+
+            btn.classList.add('selected');
+            container.classList.add('locked');
+            
+            document.getElementById('hub-agree').style.display = 'block';
+            window.unlockNextManual();
+        }
+
+        window.spinCategory = function(btn) {
+            const categories = ["CLOTHES", "ELECTRONICS", "DOCUMENTS", "TOILETRIES"];
+            const display = document.getElementById('category-display');
+            let count = 0;
+            btn.style.display = 'none';
+            display.style.color = "#fff";
+            display.style.transform = "scale(1)";
+
+            const interval = setInterval(() => {
+                display.innerText = categories[Math.floor(Math.random() * categories.length)];
+                count++;
+                if(count > 15) {
+                    clearInterval(interval);
+                    display.style.color = "var(--brand-main)";
+                    display.style.transform = "scale(1.1)";
+                    document.getElementById('n3-checks').style.display = 'flex';
+                    document.getElementById('hub-n3').style.display = 'block';
+                }
+            }, 100);
+        }
+
+        let n3CheckedCount = 0;
+        window.checkN3 = function(circle) {
+            if(circle.classList.contains('filled')) return;
+            circle.classList.add('filled');
+            circle.innerHTML = '<i class="fa-solid fa-check"></i>';
+            n3CheckedCount++;
+            if(n3CheckedCount === 3) {
+                window.unlockNextManual();
+            }
+        }
+
+        window.showHub = (id) => { const hub = document.getElementById(id); if (hub) hub.style.display = 'block'; };
+        
+        let hudTimerInt; let hudTime = 60;
+        window.startTimer = function() {
+            clearInterval(hudTimerInt); hudTime = 60;
+            const tEl = document.getElementById('hud-timer');
+            tEl.innerText = "00:60"; tEl.style.color = "var(--brand-main)";
+            hudTimerInt = setInterval(() => {
+                hudTime--; tEl.innerText = `00:${hudTime < 10 ? '0'+hudTime : hudTime}`;
+                if(hudTime <= 10) tEl.style.color = "var(--incorrect)";
+                if(hudTime <= 0) clearInterval(hudTimerInt);
+            }, 1000);
+        };
+        window.toggleCorrectionMode = function() { document.body.classList.toggle('correction-mode'); };
+        window.showAlert = function(msg, type) {
+            const overlay = document.getElementById('alert-screen');
+            const textEl = document.getElementById('alert-msg');
+            textEl.innerHTML = msg; textEl.className = 'alert-text alert-' + type;
+            overlay.classList.add('show');
+            setTimeout(() => { overlay.classList.remove('show'); }, 2500);
+        };
+        let starCount = 0;
+        window.awardStar = function() { starCount++; document.getElementById('hud-stars').innerText = '⭐ ' + starCount; showAlert('⭐<br>+1 POINT!', 'star'); };
+
+        window.toggleSidebar = function(id) {
+            let el = document.getElementById(id);
+            if (!el) return;
+            const mainContainer = document.getElementById('slides-container');
+            if(el.classList.contains('open') || el.classList.contains('right-open')) {
+                el.classList.remove('open', 'right-open');
+                mainContainer.style.transform = 'scale(1) translateX(0)';
+            } else {
+                document.querySelectorAll('.sidebar-panel, .teacher-hud').forEach(p => p.classList.remove('open', 'right-open'));
+                el.classList.add(id === 'vocab-panel' || id === 'dict-panel' ? 'right-open' : 'open');
+                mainContainer.style.transform = 'scale(0.95) translateX(-2vw)';
+            }
+        };
+
+        window.toggleFullscreen = function() { try { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(()=>{}); } else { document.exitFullscreen(); } } catch (err) {} }
+
+        window.onload = () => { update(); };
+    </script>
+</body>
+</html>
